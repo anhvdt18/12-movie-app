@@ -4,8 +4,6 @@ import { Checkbox, FormGroup, FormControlLabel } from "@mui/material";
 function FMultiCheckbox({ name, options, ...other }) {
   const { control } = useFormContext();
 
-  console.log(options);
-
   return (
     <Controller
       name={name}

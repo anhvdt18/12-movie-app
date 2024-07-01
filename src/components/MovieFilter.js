@@ -1,5 +1,4 @@
 import React from "react";
-// import FGenreList from "./form/FGenreList";
 import { Box, Button, Stack } from "@mui/material";
 import FMultiCheckbox from "./form/FMultiCheckbox";
 import MovieSearch from "./MovieSearch";

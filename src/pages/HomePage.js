@@ -18,37 +18,12 @@ function HomePage() {
   const [loading, setLoading] = useState(true);
   // eslint-disable-next-line
   const [error, setError] = useState("");
-
   const [page, setPage] = useState(1);
   const handleChange = (event, value) => {
     setPage(value);
   };
-  console.log(movies);
-  // get movie data via Axios:
-  const movieData = axios.create({
-    baseURL: MOVIE_URL + `?page=${page}&` + API_KEY,
-  });
+  const [rawMovieData, setRawMovieData] = useState();
 
-  useEffect(() => {
-    const getMovies = async () => {
-      setLoading(true);
-      try {
-        const res = await movieData.get("");
-        setMovies(res.data.results);
-        setError("");
-      } catch (error) {
-        console.log(error);
-        setError(error.message);
-      }
-      setLoading(false);
-    };
-    getMovies();
-    // eslint-disable-next-line
-  }, [page]);
-
-  // Get genres data via Axios but reference from Coder Store
-
-  //search and filter by genre:
   const defaultValues = {
     genres: [],
     searchQuery: "",
@@ -59,14 +34,41 @@ function HomePage() {
   const filters = watch();
   const filterMovies = applyFilter(movies, filters);
 
-  // const a = 10;
-  // const b = "10";
+  const getMovies = async (filters) => {
+    let URL = `${MOVIE_URL}?page=${page}`;
+    for (const filter in filters) {
+      if (filter === "genres") {
+        URL += `&with_genres=${filters[filter].join(`,`)}`;
+      }
+      if (filter === "searchQuery") {
+        URL += `&with_keywords=${filters[filter]}`;
+      }
+    }
+    URL += `&${API_KEY}`;
+    setLoading(true);
+    try {
+      const res = await axios({
+        method: "get",
+        url: URL,
+      });
+      setRawMovieData(res.data);
+      setMovies(res.data.results);
+      setError("");
+    } catch (error) {
+      console.log(error);
+      setError(error.message);
+    }
+    setLoading(false);
+  };
 
-  // if (a === b) {
-  //   console.log(true, "see result here");
-  // } else {
-  //   console.log(false, "see result here");
-  // }
+  useEffect(() => {
+    getMovies(filters);
+    // eslint-disable-next-line
+  }, [page, watch]);
+
+  // Get genres data via Axios but reference from Coder Store
+
+  //search and filter by genre:
 
   function applyFilter(movies, filters) {
     let filteredMovies = movies;
@@ -106,15 +108,24 @@ function HomePage() {
     <Stack
       direction={{ xs: "column", sm: "row" }}
       spacing={{ xs: 1, sm: 2, md: 4 }}
+      width="100%"
     >
       <Stack sx={{ minWidth: 250, p: 2 }} spacing={2}>
         <FormProvider methods={methods}>
           <MovieFilter genres={genres} resetFilter={reset} />
         </FormProvider>
       </Stack>
-      <Stack direction="column" spacing={2} sx={{ minWidth: 250, p: 2 }}>
+      <Stack
+        direction="column"
+        spacing={2}
+        sx={{ minWidth: 250, width: "100%", p: 2 }}
+      >
         <MovieList movies={filterMovies} page={page} />
-        <FPages handleChange={handleChange} page={page} />
+        <FPages
+          handleChange={handleChange}
+          page={page}
+          totalPages={rawMovieData ? rawMovieData.total_pages : 0}
+        />
       </Stack>
     </Stack>
   );
